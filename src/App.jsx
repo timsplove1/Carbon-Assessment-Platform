@@ -12,10 +12,7 @@ export default function App() {
       <nav className="bg-white border-b px-8 py-4 flex justify-between items-center shadow-md sticky top-0 z-50">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-extrabold text-xl shadow-lg">C</div>
-          <div>
-            <h1 className="text-lg font-black leading-none">組織碳盤查系統</h1>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Activity Data Portal</p>
-          </div>
+          <h1 className="text-lg font-black leading-none">碳盤查採集系統</h1>
         </div>
         <div className="flex gap-6 items-center">
           <div className="text-right">
@@ -24,13 +21,13 @@ export default function App() {
           </div>
           {user.role === 'admin' && (
             <button onClick={() => setIsAdminView(!isAdminView)} className="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-lg font-bold text-sm hover:bg-indigo-100 transition-all border border-indigo-100 shadow-sm">
-              {isAdminView? "返回填報頁" : "管理員後台"}
+              {isAdminView? "返回填報" : "管理員後台"}
             </button>
           )}
-          <button onClick={() => setUser(null)} className="text-sm font-bold text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg transition-all">安全登出</button>
+          <button onClick={() => setUser(null)} className="text-sm font-bold text-red-500 px-3 py-2 rounded-lg transition-all">登出</button>
         </div>
       </nav>
-      <main className="max-w-7xl mx-auto p-6 lg:p-12">
+      <main className="max-w-7xl mx-auto p-6">
         {isAdminView? <AdminPortal /> : <UserForm user={user} />}
       </main>
     </div>
@@ -48,10 +45,10 @@ function LoginScreen({ onLogin }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-indigo-600 p-6">
       <div className="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-sm">
-        <h2 className="text-3xl font-black text-center mb-8 text-slate-800">系統登入</h2>
+        <h2 className="text-3xl font-black text-center mb-8">登入系統</h2>
         <form onSubmit={handleLogin} className="space-y-6">
-          <input name="username" placeholder="帳號" required className="w-full bg-slate-50 border-none rounded-xl p-4 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
-          <input name="password" type="password" placeholder="密碼" required className="w-full bg-slate-50 border-none rounded-xl p-4 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+          <input name="username" placeholder="帳號" required className="w-full bg-slate-50 border-none rounded-xl p-4 focus:ring-2 focus:ring-indigo-500 outline-none" />
+          <input name="password" type="password" placeholder="密碼" required className="w-full bg-slate-50 border-none rounded-xl p-4 focus:ring-2 focus:ring-indigo-500 outline-none" />
           <button className="w-full bg-indigo-600 text-white font-black py-4 rounded-xl shadow-xl hover:bg-indigo-700 active:scale-95 transition-all">確認進入</button>
         </form>
       </div>
@@ -67,7 +64,9 @@ function UserForm({ user }) {
   const [catalog, setCatalog] = useState();
 
   useEffect(() => {
-    fetch(`/api/catalog?dept_id=${user.dept_id}`).then(res => res.json()).then(data => setCatalog(data ||));
+    if (user) {
+      fetch(`/api/catalog?dept_id=${user.dept_id}`).then(res => res.json()).then(data => setCatalog(data ||));
+    }
   }, [user]);
 
   const onSubmit = async (data) => {
@@ -76,34 +75,34 @@ function UserForm({ user }) {
   };
 
   return (
-    <div className="bg-white p-8 lg:p-12 rounded-3xl shadow-xl border border-slate-100">
+    <div className="bg-white p-8 lg:p-12 rounded-3xl shadow-xl border">
       <h2 className="text-3xl font-black text-slate-800 mb-8 underline decoration-indigo-200 underline-offset-8">活動數據填報：{user.dept_name}</h2>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         {fields.map((field, index) => {
           const selected = watch(`records.${index}.item_name`);
           return (
-            <div key={field.id} className="relative p-8 bg-slate-50 rounded-2xl border border-slate-200 grid grid-cols-1 md:grid-cols-12 gap-6 items-end animate-in fade-in">
+            <div key={field.id} className="relative p-8 bg-slate-50 rounded-2xl border border-slate-200 grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
               <div className="md:col-span-3">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">盤查項目</label>
-                <select {...register(`records.${index}.item_name`)} required className="w-full border-none bg-white rounded-xl p-3 shadow-sm focus:ring-2 focus:ring-indigo-500">
+                <select {...register(`records.${index}.item_name`)} required className="w-full bg-white rounded-xl p-3 shadow-sm focus:ring-2 focus:ring-indigo-500">
                   <option value="">-- 請選取 --</option>
                   {catalog.map(c => <option key={c.id} value={c.item_name}>{c.item_name}</option>)}
-                  <option value="other">--- 其它 (手動填寫補充) ---</option>
+                  <option value="other">--- 其它 (手動補充) ---</option>
                 </select>
               </div>
               {selected === 'other' && (
                 <div className="md:col-span-3">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">補充項目名稱</label>
-                  <input {...register(`records.${index}.custom_info`)} required placeholder="輸入項目名稱" className="w-full border-none rounded-xl p-3 shadow-sm" />
+                  <input {...register(`records.${index}.custom_info`)} required placeholder="輸入名稱" className="w-full rounded-xl p-3 shadow-sm" />
                 </div>
               )}
               <div className="md:col-span-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">活動數據量</label>
-                <input type="number" step="any" {...register(`records.${index}.value`)} required placeholder="數值" className="w-full border-none rounded-xl p-3 shadow-sm" />
+                <input type="number" step="any" {...register(`records.${index}.value`)} required placeholder="數值" className="w-full rounded-xl p-3 shadow-sm" />
               </div>
               <div className="md:col-span-3">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">數據位置 (Drive URL)</label>
-                <input {...register(`records.${index}.url`)} required placeholder="https://drive..." className="w-full border-none rounded-xl p-3 shadow-sm text-indigo-600 font-medium" />
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">佐證網址 (Google Drive)</label>
+                <input {...register(`records.${index}.url`)} required placeholder="https://drive..." className="w-full rounded-xl p-3 shadow-sm text-indigo-600" />
               </div>
               <div className="md:col-span-1 text-right">
                 <button type="button" onClick={() => remove(index)} className="p-3 text-red-400 hover:text-red-600 transition-colors font-bold">刪除</button>
@@ -111,7 +110,7 @@ function UserForm({ user }) {
             </div>
           );
         })}
-        <button type="button" onClick={() => append({ item_name: "", value: "", url: "" })} className="w-full border-2 border-dashed border-slate-200 py-4 rounded-2xl text-slate-400 font-bold hover:bg-white hover:border-indigo-300 hover:text-indigo-600 transition-all">+ 新增活動紀錄</button>
+        <button type="button" onClick={() => append({ item_name: "", value: "", url: "" })} className="w-full border-2 border-dashed border-slate-200 py-4 rounded-2xl text-slate-400 font-bold hover:bg-white hover:border-indigo-300 transition-all">+ 新增紀錄項目</button>
         <button type="submit" className="w-full bg-indigo-600 text-white font-black py-5 rounded-2xl shadow-xl hover:bg-indigo-700 transition-all">確認提交所有數據</button>
       </form>
     </div>
@@ -126,10 +125,10 @@ function AdminPortal() {
 
   return (
     <div className="bg-white p-8 lg:p-12 rounded-3xl shadow-xl border border-slate-100">
-      <div className="flex gap-8 border-b border-slate-100 mb-10 overflow-x-auto">
-        <button onClick={() => setActiveTab("catalog")} className={`pb-4 font-black text-sm uppercase tracking-widest transition-all ${activeTab === 'catalog'? "text-indigo-600 border-b-2 border-indigo-600" : "text-slate-300"}`}>項目清單維護</button>
-        <button onClick={() => setActiveTab("users")} className={`pb-4 font-black text-sm uppercase tracking-widest transition-all ${activeTab === 'users'? "text-indigo-600 border-b-2 border-indigo-600" : "text-slate-300"}`}>會員帳號管理</button>
-        <button onClick={() => setActiveTab("depts")} className={`pb-4 font-black text-sm uppercase tracking-widest transition-all ${activeTab === 'depts'? "text-indigo-600 border-b-2 border-indigo-600" : "text-slate-300"}`}>部門架構設定</button>
+      <div className="flex gap-8 border-b mb-10 overflow-x-auto">
+        <button onClick={() => setActiveTab("catalog")} className={`pb-4 font-black text-sm uppercase tracking-widest ${activeTab === 'catalog'? "text-indigo-600 border-b-2 border-indigo-600" : "text-slate-300"}`}>清單互動維護</button>
+        <button onClick={() => setActiveTab("users")} className={`pb-4 font-black text-sm uppercase tracking-widest ${activeTab === 'users'? "text-indigo-600 border-b-2 border-indigo-600" : "text-slate-300"}`}>會員管理</button>
+        <button onClick={() => setActiveTab("depts")} className={`pb-4 font-black text-sm uppercase tracking-widest ${activeTab === 'depts'? "text-indigo-600 border-b-2 border-indigo-600" : "text-slate-300"}`}>部門架構設定</button>
       </div>
       {activeTab === 'catalog' && <CatalogManager depts={depts} />}
       {activeTab === 'users' && <UserManager depts={depts} />}
@@ -143,13 +142,13 @@ function DeptManager({ depts, onUpdate }) {
     e.preventDefault();
     const name = new FormData(e.target).get("name");
     await fetch("/api/admin/depts", { method: "POST", body: JSON.stringify({ name }) });
-    alert("部門已新增"); e.target.reset(); onUpdate();
+    alert("部門已成功新增"); e.target.reset(); onUpdate();
   };
   return (
     <div className="space-y-10">
-      <form onSubmit={addDept} className="flex gap-4 p-6 bg-slate-50 rounded-2xl border border-slate-100">
-        <input name="name" placeholder="輸入新部門名稱 (如: 生產二部)" required className="flex-1 rounded-xl p-4 shadow-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-        <button className="bg-indigo-600 text-white px-8 py-4 rounded-xl font-black shadow-lg shadow-indigo-100">新增部門</button>
+      <form onSubmit={addDept} className="flex gap-4 p-6 bg-slate-50 rounded-2xl border">
+        <input name="name" placeholder="輸入新部門名稱" required className="flex-1 rounded-xl p-4 shadow-sm outline-none" />
+        <button className="bg-indigo-600 text-white px-8 py-4 rounded-xl font-black">新增部門</button>
       </form>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {depts.map(d => (
@@ -180,25 +179,25 @@ function CatalogManager({ depts }) {
   };
 
   const deleteItem = async (id) => {
-    if (!window.confirm("確定刪除此排放項目？")) return;
+    if (!window.confirm("確定刪除此項目？")) return;
     await fetch(`/api/admin/catalog?id=${id}`, { method: "DELETE" });
     setItems(items.filter(i => i.id!== id));
   };
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-top-4">
+    <div className="space-y-10">
       <div className="p-6 bg-indigo-50 rounded-2xl border border-indigo-100">
         <label className="text-[10px] font-black text-indigo-400 uppercase tracking-widest block mb-2">選擇部門以編輯其清單項目</label>
-        <select onChange={(e) => setSelectedDept(e.target.value)} className="w-full bg-white rounded-xl p-4 shadow-sm focus:ring-2 focus:ring-indigo-500 font-bold text-indigo-700 transition-all outline-none">
-          <option value="">-- 先選擇部門 --</option>
+        <select onChange={(e) => setSelectedDept(e.target.value)} className="w-full bg-white rounded-xl p-4 shadow-sm focus:ring-2 focus:ring-indigo-500 font-bold text-indigo-700 outline-none transition-all">
+          <option value="">-- 先選擇欲維護的部門 --</option>
           {depts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
         </select>
       </div>
       {selectedDept && (
         <div className="space-y-6">
           <form onSubmit={addItem} className="flex gap-4 p-6 bg-emerald-50 rounded-2xl border border-emerald-100">
-            <input name="item_name" placeholder="輸入項目名稱 (如: 堆高機柴油)" required className="flex-1 rounded-xl p-4 shadow-sm outline-none" />
-            <button className="bg-emerald-600 text-white px-8 rounded-xl font-black shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all">新增項目</button>
+            <input name="item_name" placeholder="新增項目名稱 (如: 堆高機柴油)" required className="flex-1 rounded-xl p-4 shadow-sm outline-none" />
+            <button className="bg-emerald-600 text-white px-8 rounded-xl font-black shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all">新增</button>
           </form>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {items.map(i => (
@@ -222,8 +221,8 @@ function UserManager({ depts }) {
     alert("會員帳號已建立完成"); e.target.reset();
   };
   return (
-    <div className="max-w-2xl bg-slate-50 p-10 rounded-3xl border border-slate-200 shadow-inner">
-      <h3 className="text-xl font-black text-slate-800 mb-8 underline decoration-indigo-200 underline-offset-8">新增同仁帳號</h3>
+    <div className="max-w-2xl bg-slate-50 p-10 rounded-3xl border border-slate-200">
+      <h3 className="text-xl font-black text-slate-800 mb-8 underline decoration-indigo-200 underline-offset-8">建立新的員工帳號</h3>
       <form onSubmit={addUser} className="space-y-6">
         <div className="grid grid-cols-2 gap-4">
           <input name="username" placeholder="設定登入帳號" required className="rounded-xl p-4 shadow-sm border-none outline-none focus:ring-2 focus:ring-indigo-500 font-medium" />
@@ -233,7 +232,7 @@ function UserManager({ depts }) {
           <option value="">-- 指派所屬部門 --</option>
           {depts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
         </select>
-        <button className="w-full bg-slate-900 text-white font-black py-5 rounded-2xl shadow-xl hover:bg-black transition-all">確認新增會員</button>
+        <button className="w-full bg-slate-900 text-white font-black py-5 rounded-2xl shadow-xl hover:bg-black transition-all">確認建立員工帳號</button>
       </form>
     </div>
   );
